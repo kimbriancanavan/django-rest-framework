@@ -5,6 +5,7 @@ from decimal import Decimal
 from operator import attrgetter
 from urllib.parse import urljoin
 
+from django.core.exceptions import FieldDoesNotExist
 from django.core.validators import (
     DecimalValidator, EmailValidator, MaxLengthValidator, MaxValueValidator,
     MinLengthValidator, MinValueValidator, RegexValidator, URLValidator
@@ -378,7 +379,12 @@ class AutoSchema(ViewInspector):
                 'items': self.map_field(field.child_relation)
             }
         if isinstance(field, serializers.PrimaryKeyRelatedField):
-            model = getattr(field.queryset, 'model', getattr(field, 'model', None))
+            model = getattr(field.queryset, 'model', None)
+            if model is None and hasattr(field.parent.Meta, 'model'):
+                try:
+                    model = field.parent.Meta.model._meta.get_field(field.field_name).model
+                except FieldDoesNotExist:
+                    pass
             if model is not None:
                 model_field = model._meta.pk
                 if isinstance(model_field, models.AutoField):
