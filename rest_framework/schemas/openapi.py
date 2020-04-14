@@ -567,10 +567,18 @@ class AutoSchema(ViewInspector):
                 if isinstance(field, serializers.ListField):
                     attr_name = 'minItems'
                 schema[attr_name] = v.limit_value
-            elif isinstance(v, MaxValueValidator):
-                schema['maximum'] = v.limit_value
-            elif isinstance(v, MinValueValidator):
-                schema['minimum'] = v.limit_value
+            elif isinstance(v, MaxValueValidator) and (not isinstance(v.limit_value, Decimal)
+                                                       or not api_settings.COERCE_DECIMAL_TO_STRING):
+                limit_value = v.limit_value
+                if isinstance(v.limit_value, Decimal):
+                    limit_value = float(v.limit_value)
+                schema['maximum'] = limit_value
+            elif isinstance(v, MinValueValidator) and (not isinstance(v.limit_value, Decimal)
+                                                       or not api_settings.COERCE_DECIMAL_TO_STRING):
+                limit_value = v.limit_value
+                if isinstance(v.limit_value, Decimal):
+                    limit_value = float(v.limit_value)
+                schema['minimum'] = limit_value
             elif isinstance(v, DecimalValidator) and \
                     not getattr(field, 'coerce_to_string', api_settings.COERCE_DECIMAL_TO_STRING):
                 if v.decimal_places:

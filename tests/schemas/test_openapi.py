@@ -1,8 +1,10 @@
 import uuid
 import warnings
+from decimal import Decimal
 
 import pytest
 from django.conf.urls import url
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.test import RequestFactory, TestCase, override_settings
 from django.utils.translation import gettext_lazy as _
 
@@ -106,6 +108,42 @@ class TestFieldMapping(TestCase):
         assert data['properties']['default_true']['default'] is True, "default must be true"
         assert data['properties']['default_false']['default'] is False, "default must be false"
         assert 'default' not in data['properties']['without_default'], "default must not be defined"
+
+    def test_min_and_max_validators(self):
+        inspector = AutoSchema()
+        positive_cases = [
+            ({},
+             serializers.DecimalField(validators=[MinValueValidator(limit_value=1)],
+                                      decimal_places=2, max_digits=5),
+             {'minimum': 1}),
+            ({},
+             serializers.DecimalField(validators=[MaxValueValidator(limit_value=1)],
+                                      decimal_places=2, max_digits=5),
+             {'maximum': 1}),
+            ({'COERCE_DECIMAL_TO_STRING': False},
+             serializers.DecimalField(validators=[MinValueValidator(limit_value=Decimal('1'))],
+                                      decimal_places=2, max_digits=5),
+             {'minimum': 1.0}),
+            ({'COERCE_DECIMAL_TO_STRING': False},
+             serializers.DecimalField(validators=[MaxValueValidator(limit_value=Decimal('1'))],
+                                      decimal_places=2, max_digits=5),
+             {'maximum': 1.0}),
+            ({},
+             serializers.DecimalField(validators=[MinValueValidator(limit_value=Decimal('1'))],
+                                      decimal_places=2, max_digits=5),
+             {}),
+            ({},
+             serializers.DecimalField(validators=[MaxValueValidator(limit_value=Decimal('1'))],
+                                      decimal_places=2, max_digits=5),
+             {}),
+        ]
+
+        for overriden_settings, field, mapping in positive_cases:
+            with override_settings(REST_FRAMEWORK=overriden_settings):
+                with self.subTest(field=field):
+                    schema = {}
+                    inspector.map_field_validators(field, schema)
+                    assert schema == mapping
 
 
 @pytest.mark.skipif(uritemplate is None, reason='uritemplate not installed.')
