@@ -387,7 +387,7 @@ class AutoSchema(ViewInspector):
                     pass
             if model is not None:
                 model_field = model._meta.pk
-                if isinstance(model_field, models.AutoField):
+                if isinstance(model_field, (models.AutoField, models.IntegerField, models.BigIntegerField)):
                     return {'type': 'integer'}
 
         # ChoiceFields (single and multiple).
