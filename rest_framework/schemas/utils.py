@@ -15,7 +15,7 @@ def is_list_view(path, method, view):
     """
     if hasattr(view, 'action'):
         # Viewsets have an explicitly defined action, which we can inspect.
-        return view.action == 'list'
+        return 'list' in view.action
 
     if method.lower() != 'get':
         return False
