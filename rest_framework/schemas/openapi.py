@@ -318,7 +318,7 @@ class AutoSchema(ViewInspector):
         if getattr(self.view, 'filter_backends', None) is None:
             return False
         if hasattr(self.view, 'action'):
-            return self.view.action in ["list", "retrieve", "update", "partial_update", "destroy"]
+            return 'list' in self.view.action or self.view.action in ["list", "retrieve", "update", "partial_update", "destroy"]
         return method.lower() in ["get", "put", "patch", "delete"]
 
     def get_pagination_parameters(self, path, method):
