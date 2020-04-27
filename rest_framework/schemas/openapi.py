@@ -251,7 +251,9 @@ class AutoSchema(ViewInspector):
         Compute an operation ID from the view type and get_operation_id_base method.
         """
         method_name = getattr(self.view, 'action', method.lower())
-        if is_list_view(path, method, self.view):
+        if hasattr(self.view, 'action'):
+            action = self.view.action
+        elif is_list_view(path, method, self.view):
             action = 'list'
         elif method_name not in self.method_mapping:
             action = self._to_camel_case(method_name)
