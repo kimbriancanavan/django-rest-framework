@@ -390,15 +390,15 @@ class AutoSchema(ViewInspector):
                         model = f.related_model
                     else:
                         model = f.model
-                    while isinstance(model._meta.pk, RelatedField):
-                        f = model._meta.pk
-                        if isinstance(f, RelatedField):
-                            model = f.related_model
-                        else:
-                            model = f.model
                 except FieldDoesNotExist:
                     pass
             if model is not None:
+                while isinstance(model._meta.pk, RelatedField):
+                    f = model._meta.pk
+                    if isinstance(f, RelatedField):
+                        model = f.related_model
+                    else:
+                        model = f.model
                 model_field = model._meta.pk
                 if isinstance(model_field, (models.AutoField, models.IntegerField, models.BigIntegerField)):
                     return {'type': 'integer'}
